@@ -3,14 +3,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.500</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>2.7</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
   <groupId>jp.shiftinc.jenkins.plugins</groupId>
-  <artifactId>discard-old-build</artifactId>
-  <version>1.03</version>
+  <artifactId>discard-old-build-forked</artifactId>
+  <version>1.03-FORK</version>
   <packaging>hpi</packaging>
-  <name>Discard Old Build plugin</name>
+  <name>Discard Old Build plugin (Forked)</name>
   <description>Add post-build step to discard old builds with detail configuration</description>
   
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
