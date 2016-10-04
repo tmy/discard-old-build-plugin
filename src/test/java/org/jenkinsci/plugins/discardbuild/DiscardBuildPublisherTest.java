@@ -49,26 +49,26 @@ public class DiscardBuildPublisherTest extends TestCase {
 	
 	public void setUp() throws Exception {
 		// setUp build histories
-		buildList.add(createBuild(job, Result.SUCCESS, "20130120")); // #20
-		buildList.add(createBuild(job, Result.FAILURE, "20130119")); // #19
-		buildList.add(createBuild(job, Result.SUCCESS, "20130118")); // #18
-		buildList.add(createBuild(job, Result.SUCCESS, "20130117")); // #17 // for daysToKeep
-		buildList.add(createBuild(job, Result.FAILURE, "20130117")); // #16 // for daysToKeep
-		buildList.add(createBuild(job, Result.SUCCESS, "20130117")); // #15
-		buildList.add(createBuild(job, Result.SUCCESS, "20130114")); // #14
-		buildList.add(createBuild(job, Result.SUCCESS, "20130113")); // #13
-		buildList.add(createBuild(job, Result.SUCCESS, "20130112")); // #12
-		buildList.add(createBuild(job, Result.FAILURE, "20130111")); // #11
-		buildList.add(createBuild(job, Result.FAILURE, "20130110")); // #10
-		buildList.add(createBuild(job, Result.SUCCESS, "20130109")); // #9
-		buildList.add(createBuild(job, Result.SUCCESS, "20130108")); // #8
-		buildList.add(createBuild(job, Result.SUCCESS, "20130107")); // #7
-		buildList.add(createBuild(job, Result.SUCCESS, "20130106")); // #6
-		buildList.add(createBuild(job, Result.SUCCESS, "20130105")); // #5
-		buildList.add(createBuild(job, Result.FAILURE, "20130104")); // #4
-		buildList.add(createBuild(job, Result.ABORTED,   "20130103")); // #3
-		buildList.add(createBuild(job, Result.UNSTABLE,  "20130102")); // #2
-		buildList.add(createBuild(job, Result.NOT_BUILT,   "20130101")); // #1
+		buildList.add(createBuild(job, 20, Result.SUCCESS, "20130120")); // #20
+		buildList.add(createBuild(job, 19, Result.FAILURE, "20130119")); // #19
+		buildList.add(createBuild(job, 18, Result.SUCCESS, "20130118")); // #18
+		buildList.add(createBuild(job, 17, Result.SUCCESS, "20130117")); // #17 // for daysToKeep
+		buildList.add(createBuild(job, 16, Result.FAILURE, "20130117")); // #16 // for daysToKeep
+		buildList.add(createBuild(job, 15, Result.SUCCESS, "20130117")); // #15
+		buildList.add(createBuild(job, 14, Result.SUCCESS, "20130114")); // #14
+		buildList.add(createBuild(job, 13, Result.SUCCESS, "20130113")); // #13
+		buildList.add(createBuild(job, 12, Result.SUCCESS, "20130112")); // #12
+		buildList.add(createBuild(job, 11, Result.FAILURE, "20130111")); // #11
+		buildList.add(createBuild(job, 10, Result.FAILURE, "20130110")); // #10
+		buildList.add(createBuild(job, 9, Result.SUCCESS, "20130109")); // #9
+		buildList.add(createBuild(job, 8, Result.SUCCESS, "20130108")); // #8
+		buildList.add(createBuild(job, 7, Result.SUCCESS, "20130107")); // #7
+		buildList.add(createBuild(job, 6, Result.SUCCESS, "20130106")); // #6
+		buildList.add(createBuild(job, 5, Result.SUCCESS, "20130105")); // #5
+		buildList.add(createBuild(job, 4, Result.FAILURE, "20130104")); // #4
+		buildList.add(createBuild(job, 3, Result.ABORTED,   "20130103")); // #3
+		buildList.add(createBuild(job, 2, Result.UNSTABLE,  "20130102")); // #2
+		buildList.add(createBuild(job, 1, Result.NOT_BUILT,   "20130101")); // #1
 
 		when(listener.getLogger()).thenReturn(logger);
 		when(job.getBuilds()).thenReturn(RunList.fromRuns(buildList));
@@ -142,7 +142,7 @@ public class DiscardBuildPublisherTest extends TestCase {
 				false, false, true, false, false,		// failure
 				"", "",
 				false, false, true, false, false));		// failure
-		
+
 		publisher.perform((AbstractBuild<?, ?>) build, launcher, listener);
 
 		verify(buildList.get(0), times(1)).delete();
@@ -228,7 +228,45 @@ public class DiscardBuildPublisherTest extends TestCase {
 		verify(buildList.get(18), times(1)).delete();
 		verify(buildList.get(19), never()).delete(); // to keep
 	}
-	
+
+	public void testPerformNextBuildIntervalNumToKeep() throws Exception {
+		buildList = new ArrayList<FreeStyleBuild>();
+		buildList.add(createBuild(job, 22, Result.SUCCESS, "20130121")); // #22, new build
+		buildList.add(createBuild(job, 21, Result.SUCCESS, "20130121")); // #21, new build
+		buildList.add(createBuild(job, 20, Result.SUCCESS, "20130120")); // #20, new build
+		buildList.add(createBuild(job, 19, Result.FAILURE, "20130119")); // #19, new build
+		buildList.add(createBuild(job, 18, Result.SUCCESS, "20130118")); // #18, new build
+		buildList.add(createBuild(job, 17, Result.SUCCESS, "20130117")); // #17
+		buildList.add(createBuild(job, 16, Result.FAILURE, "20130117")); // #16, to keep
+		buildList.add(createBuild(job, 13, Result.SUCCESS, "20130113")); // #13, to keep
+		buildList.add(createBuild(job, 10, Result.FAILURE, "20130110")); // #10, to keep
+		buildList.add(createBuild(job, 7, Result.SUCCESS, "20130107")); // #7, to keep
+		buildList.add(createBuild(job, 4, Result.FAILURE, "20130104")); // #4, to keep
+		buildList.add(createBuild(job, 1, Result.NOT_BUILT, "20130101")); // #1, to keep
+		when(job.getBuilds()).thenReturn(RunList.fromRuns(buildList));
+
+		DiscardBuildPublisher publisher = getPublisher(new DiscardBuildPublisher(
+			"", "5",
+			false, false, false, false, false,
+			"", "3",
+			false, false, false, false, false));
+
+		publisher.perform((AbstractBuild<?, ?>) build, launcher, listener);
+
+		verify(buildList.get(0), never()).delete(); // #22, new build
+		verify(buildList.get(1), never()).delete(); // #21, new build
+		verify(buildList.get(2), never()).delete(); // #20, new build
+		verify(buildList.get(3), never()).delete(); // #19, new build
+		verify(buildList.get(4), never()).delete(); // #18, new build
+		verify(buildList.get(5), times(1)).delete(); // #17
+		verify(buildList.get(6), never()).delete(); // #16, to keep
+		verify(buildList.get(7), never()).delete(); // #13, to keep
+		verify(buildList.get(8), never()).delete(); // #10, to keep
+		verify(buildList.get(9), never()).delete(); // #7, to keep
+		verify(buildList.get(10), never()).delete(); // #4, to keep
+		verify(buildList.get(11), never()).delete(); // #1, to keep
+	}
+
 	public void testPerformStatusToKeepOld() throws Exception {
 		DiscardBuildPublisher publisher = getPublisher(new DiscardBuildPublisher(
 				"", "5",
@@ -260,9 +298,9 @@ public class DiscardBuildPublisherTest extends TestCase {
 		verify(buildList.get(19), times(1)).delete();
 	}
 	
-	private FreeStyleBuild createBuild(FreeStyleProject project, Result result, String yyyymmdd) throws Exception {
+	private FreeStyleBuild createBuild(FreeStyleProject project, int number, Result result, String yyyymmdd) throws Exception {
 		FreeStyleBuild build = spy(new FreeStyleBuild(project));
-		
+		when(build.getNumber()).thenReturn(number);
 		when(build.getResult()).thenReturn(result);
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(sdf.parse(yyyymmdd));

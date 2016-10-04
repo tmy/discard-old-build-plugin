@@ -155,12 +155,13 @@ public class DiscardBuildPublisher extends Recorder {
 
 			// advanced option
 			Run<?, ?> prev = null;
-			int prevIndex = 0;
-			
+			int prevBuildNo = 0;
 			for (int i = 0; i < oldBuilds.size(); i++) {
                 int oldBuild = parse(oldBuilds.get(i));
+                boolean doneBuild = false;
                 for (Run<?, ?> r : builds) {
-                    if (builds.indexOf(r) == oldBuild) {
+                    if ((! doneBuild) && builds.indexOf(r) == oldBuild) {
+                        doneBuild = true;
                         if (r == lsb || r == lstb) {
                             // Always keep latest successful / stable builds
                             continue;
@@ -171,9 +172,9 @@ public class DiscardBuildPublisher extends Recorder {
                                 continue;
                             } else if (prev == null) {
                                 prev = r;
-                                prevIndex = i;
+                                prevBuildNo = r.getNumber();
                                 continue;
-                            } else if (intervalNumToKeep != -1 && i < prevIndex + intervalNumToKeep) {
+                            } else if (intervalNumToKeep != -1 && r.getNumber() < prevBuildNo + intervalNumToKeep) {
                                 discardBuild(r, "it is old and within build number interval", listener); //$NON-NLS-1$
                                 continue;
                             } else if (intervalDaysToKeep != -1) {
@@ -186,7 +187,7 @@ public class DiscardBuildPublisher extends Recorder {
                                 }
                             }
                             prev = r;
-                            prevIndex = i;
+                            prevBuildNo = r.getNumber();
                         }
                     }
                 }
